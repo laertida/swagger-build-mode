@@ -55,7 +55,7 @@ contains a file named openapi.yaml."
     (message "I will try to enable watch on %s" (concat swagger-build-mode-project-root swagger-build-mode-project-components) )
     (setq swagger-build-mode-watch-descriptor
           (file-notify-add-watch
-           (concat swagger-build-mode-project-root swagger-build-mode-project-components)
+           (concat swagger-build-mode-project-root swagger-build-mode-project-components "/")
            '(change attribute-change)
            #'swagger-build-mode--on-change))
     (message "Swagger watcher enabled.")))
@@ -74,7 +74,7 @@ the output openapi.yaml file."
   (interactive)
   (let ((directories (swagger-build-mode-get-all-directories))
         (directory-count 0)
-        (output-file (expand-file-name "openapi.yaml" swagger-build-mode-project-root)))
+        (output-file (expand-file-name swagger-build-mode-api-file swagger-build-mode-project-root)))
     (with-temp-file output-file
       (dolist (directory directories)
         (if (directory-files directory t "\\.yaml$")
@@ -123,12 +123,6 @@ the output openapi.yaml file."
     (insert-file-contents yaml-path-file)
     (yaml-parse-string (buffer-string))))
 
-(defun swagger-build-mode-yaml-as-list (yaml-path-file)
-  "This function helps to read a yaml file and return it as list."
-  (with-temp-buffer
-    (insert-file-contents yaml-path-file)
-    (yaml-parse-string (buffer-string) :object-type 'alist)))
-
 (defun swagger-build-mode-yaml-path-list (path-list)
   "This helps to create a yaml as list from a list of paths."
   (if (= (length path-list) 1)
@@ -160,11 +154,5 @@ the output openapi.yaml file."
     (setq swagger-build-mode-watch-descriptor nil)
     (message "No longer watching for changes")))
 
-
-(defun swagger-build-mode-test-files ()
-  "Simple test function."
-  (swagger-build-mode-enable)
-  (swagger-build-mode-start-watching)
-  (message "this are all the yaml files in project: %s" (swagger-build-mode-yaml-files)))
-
+(provide 'swagger-build-mode)
 ;;; swagger-minor-mode.el ends here
