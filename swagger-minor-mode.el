@@ -19,7 +19,6 @@
 ;;
 ;;; Code:
 (require 'yaml)
-(require 'cl-lib)
 
 (define-minor-mode swagger-build-mode
   "This mode helps to build a swagger definition easily"
@@ -167,9 +166,5 @@ the output openapi.yaml file."
   (swagger-build-mode-enable)
   (swagger-build-mode-start-watching)
   (message "this are all the yaml files in project: %s" (swagger-build-mode-yaml-files)))
-
-
-(provide 'swagger-build-mode)
-(add-hook 'yaml-mode-hook #'swagger-build-mode-enable)
 
 ;;; swagger-minor-mode.el ends here
