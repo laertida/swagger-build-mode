@@ -28,6 +28,14 @@
       (swagger-build-mode-start-watching)
     (swagger-build-mode-stop-watching)))
 
+(defun swagger-build-mode-enable ()
+  "This function enables `swagger-build-mode` if inside projectile folder
+contains a file named openapi.yaml."
+  (when-let* ((swagger-project-root (projectile-project-root))
+              (openapi-file (expand-file-name swagger-build-mode-api-file swagger-project-root)))
+    (when (file-exists-p openapi-file)
+      (setq swagger-build-mode-project-root swagger-project-root)
+      (swagger-build-mode 1))))
 
 (defvar swagger-build-mode-project-components "api"
   "Swagger build mode components folder.")
@@ -38,14 +46,6 @@
 (defvar swagger-build-mode-api-file "openapi.yaml"
   "This is the file where the api definition will be written.")
 
-(defun swagger-build-mode-enable ()
-  "This function enables `swagger-build-mode` if inside projectile folder
-contains a file named openapi.yaml."
-  (when-let* ((swagger-project-root (projectile-project-root))
-              (openapi-file (expand-file-name swagger-build-mode-api-file swagger-project-root)))
-    (when (file-exists-p openapi-file)
-      (setq swagger-build-mode-project-root swagger-project-root)
-      (swagger-build-mode 1))))
 
 
 (defun swagger-build-mode-start-watching ()
@@ -160,7 +160,6 @@ the output openapi.yaml file."
     (setq swagger-build-mode-watch-descriptor nil)
     (message "No longer watching for changes")))
 
+(provide 'swagger-build-mode-enable)
 (provide 'swagger-build-mode)
-(add-hook 'yaml-mode-hook #'swagger-build-mode-enable)
-
 ;;; swagger-minor-mode.el ends here
