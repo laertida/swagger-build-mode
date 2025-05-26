@@ -160,6 +160,7 @@ the output openapi.yaml file."
     (setq swagger-build-mode-watch-descriptor nil)
     (message "No longer watching for changes")))
 
-(provide 'swagger-build-mode-enable)
+(add-hook 'yaml-mode-hook #'swagger-build-mode-enable)
+;; (provide 'swagger-build-mode-enable)
 (provide 'swagger-build-mode)
 ;;; swagger-minor-mode.el ends here
