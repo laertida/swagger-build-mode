@@ -161,5 +161,5 @@ the output openapi.yaml file."
     (message "No longer watching for changes")))
 
 (provide 'swagger-build-mode-enable)
-;;(provide 'swagger-build-mode)
+(provide 'swagger-build-mode)
 ;;; swagger-minor-mode.el ends here
