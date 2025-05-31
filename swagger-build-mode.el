@@ -19,23 +19,7 @@
 ;;
 ;;; Code:
 (require 'yaml)
-
-(define-minor-mode swagger-build-mode
-  "This mode helps to build a swagger definition easily"
-  :lighter "👷 swagger build"
-  :global nil
-  (if swagger-build-mode
-      (swagger-build-mode-start-watching)
-    (swagger-build-mode-stop-watching)))
-
-(defun swagger-build-mode-enable ()
-  "This function enables `swagger-build-mode` if inside projectile folder
-contains a file named openapi.yaml."
-  (when-let* ((swagger-project-root (projectile-project-root))
-              (openapi-file (expand-file-name swagger-build-mode-api-file swagger-project-root)))
-    (when (file-exists-p openapi-file)
-      (setq swagger-build-mode-project-root swagger-project-root)
-      (swagger-build-mode 1))))
+(require 'projectile)
 
 (defvar swagger-build-mode-project-components "api"
   "Swagger build mode components folder.")
@@ -47,23 +31,43 @@ contains a file named openapi.yaml."
   "This is the file where the api definition will be written.")
 
 
+(define-minor-mode swagger-build-mode
+  "This mode helps to build a swagger definition easily"
+  :lighter "👷 swagger build"
+  :global nil
+  (if swagger-build-mode
+      (swagger-build-mode-start-watching)
+    (swagger-build-mode-stop-watching)))
+
+
+(defun swagger-build-mode-enable ()
+  "This function enables `swagger-build-mode` if inside projectile folder
+contains a file named openapi.yaml."
+  (when-let* ((swagger-project-root (projectile-project-root))
+              (openapi-file (expand-file-name swagger-build-mode-api-file swagger-project-root)))
+    (when (file-exists-p openapi-file)
+      (setq swagger-build-mode-project-root swagger-project-root)
+      (swagger-build-mode 1))))
+
+(defun swagger-build-mode-add-watch (directory)
+  "This function helps to add a watcher on DIRECTORY path."
+  (file-notify-add-watch directory
+                         '(change attribute-change)
+                         #'swagger-build-mode--on-change))
+
 (defun swagger-build-mode-start-watching ()
-  "Begin to watch new or changed files on project root folder"
+  "Begin to watch new or changed files on  project root folder"
   (interactive)
   (when-let* ((swagger-project-root (projectile-project-root))
               (openapi-file (expand-file-name swagger-build-mode-api-file swagger-project-root)))
     (when (file-exists-p openapi-file)
+      (setq swagger-build-mode-project-root swagger-project-root)
       (unless swagger-build-mode-watch-descriptor
         (message "I will try to enable watch on %s" (concat swagger-build-mode-project-root swagger-build-mode-project-components))
         (dolist (directory (swagger-build-mode-get-all-directories))
-          (push swagger-build-mode-watch-descriptor
-                (swagger-build-mode-add-watch directory)))
+          (push (swagger-build-mode-add-watch directory) swagger-build-mode-watch-descriptor))
         (message "Swagger watcher enabled.")))))
 
-(defun swagger-build-mode-add-watch (folder)
-  (file-notify-add-watch folder
-                         '(change attribute-change)
-                         #'swagger-build-mode--on-change))
 
 (defun swagger-build-mode--on-change (event)
   "This fucntion indentifies the type of the event and the file where
