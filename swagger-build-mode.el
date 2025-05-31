@@ -1,4 +1,4 @@
-;;; swagger-minor-mode.el --- Minor mode to autoconcatenate Swagger YAML files -*- lexical-binding: t; -*-
+;;; swagger-build-mode.el --- Minor mode to autoconcatenate Swagger YAML files -*- lexical-binding: t; -*-
 ;;
 ;; Copyright (C) 2025
 ;;
@@ -8,7 +8,7 @@
 ;; Modified: mayo 15, 2025
 ;; Version: 0.0.1
 ;; Keywords: abbrev bib c calendar comm convenience data docs emulations extensions faces files frames games hardware help hypermedia i18n internal languages lisp local maint mail matching mouse multimedia news outlines processes terminals tex text tools unix vc wp
-;; Homepage: https://github.com/laertida/swagger-minor-mode
+;; Homepage: https://github.com/laertida/swagger-build-mode
 ;; Package-Requires: ((emacs "29.1"))
 ;;
 ;; This file is not part of GNU Emacs.
@@ -168,4 +168,4 @@ the output openapi.yaml file."
 ;;(add-hook 'yaml-mode-hook #'swagger-build-mode-enable)
 ;; (provide 'swagger-build-mode-enable)
 (provide 'swagger-build-mode)
-;;; swagger-minor-mode.el ends here
+;;; swagger-build-mode.el ends here
