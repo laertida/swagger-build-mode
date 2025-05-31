@@ -86,7 +86,6 @@
                                    (buffer-string)))
                    (file-content (yaml-parse-string merged-files))
                    (counter 0))
-              (message "directory path %s size: %s" directory-path (length directory-path))
               (if (> (length directory-path)  0)
                   (dolist (path (reverse directory-path) )
                     (let ((temporal-hash (make-hash-table :test 'equal)))
@@ -101,10 +100,10 @@
                       (progn (insert-file-contents yaml-file)
                              (insert "\n")
                              (setq directory-count (1+ directory-count))))))
-              (message "directory %s" directory)
               (if (> counter 0)
                   (progn (insert (yaml-encode path-tree))
-                         (insert "\n")))))))))
+                         (insert "\n")))))))
+    (message "Swagger API definition file was written on %s" output-file)))
 
 
 (defun swagger-build-mode-get-all-directories ()
