@@ -20,43 +20,30 @@
 ;;; Code:
 (require 'yaml)
 (require 'projectile)
+(require 'filenotify)
+
+(defvar swagger-build-mode-project-root nil
+  "Swagger build mode project root folder.")
 
 (defvar swagger-build-mode-project-components "api"
   "Swagger build mode components folder.")
 
 (defvar swagger-build-mode-watch-descriptor nil
-  "The descriptor for ")
+  "The descriptor for watching changes in yaml documents.")
 
 (defvar swagger-build-mode-api-file "openapi.yaml"
   "This is the file where the api definition will be written.")
 
-
 (define-minor-mode swagger-build-mode
-  "This mode helps to build a swagger definition easily"
+  "This mode helps to build a swagger definition easily."
   :lighter "👷 swagger build"
   :global nil
   (if swagger-build-mode
       (swagger-build-mode-start-watching)
     (swagger-build-mode-stop-watching)))
 
-
-(defun swagger-build-mode-enable ()
-  "This function enables `swagger-build-mode` if inside projectile folder
-contains a file named openapi.yaml."
-  (when-let* ((swagger-project-root (projectile-project-root))
-              (openapi-file (expand-file-name swagger-build-mode-api-file swagger-project-root)))
-    (when (file-exists-p openapi-file)
-      (setq swagger-build-mode-project-root swagger-project-root)
-      (swagger-build-mode 1))))
-
-(defun swagger-build-mode-add-watch (directory)
-  "This function helps to add a watcher on DIRECTORY path."
-  (file-notify-add-watch directory
-                         '(change attribute-change)
-                         #'swagger-build-mode--on-change))
-
 (defun swagger-build-mode-start-watching ()
-  "Begin to watch new or changed files on  project root folder"
+  "Begin to watch new or changed files in all directories down the root."
   (interactive)
   (when-let* ((swagger-project-root (projectile-project-root))
               (openapi-file (expand-file-name swagger-build-mode-api-file swagger-project-root)))
@@ -68,18 +55,21 @@ contains a file named openapi.yaml."
           (push (swagger-build-mode-add-watch directory) swagger-build-mode-watch-descriptor))
         (message "Swagger watcher enabled.")))))
 
+(defun swagger-build-mode-add-watch (directory)
+  "This function helps to add a watcher on DIRECTORY path."
+  (file-notify-add-watch directory
+                         '(change attribute-change)
+                         #'swagger-build-mode--on-change))
 
 (defun swagger-build-mode--on-change (event)
-  "This fucntion indentifies the type of the event and the file where
-it was made."
+  "This fucntion recieves EVENT when a watched file change."
   (let ((event-type  (nth 1 event))
         (file-name (nth 2 event)))
     (message "Change of type %s was detected on file: %s" event-type file-name)
     (swagger-build-mode-concat-yaml-files)))
 
 (defun swagger-build-mode-concat-yaml-files ()
-  "This function helps to concat all files of the api definition in
-the output openapi.yaml file."
+  "This function helps to concat all files in the output openapi.yaml file."
   (interactive)
   (let ((directories (swagger-build-mode-get-all-directories))
         (directory-count 0)
@@ -118,6 +108,7 @@ the output openapi.yaml file."
 
 
 (defun swagger-build-mode-get-all-directories ()
+  "This functions get all directories under project root."
   (let* ((base-path (concat swagger-build-mode-project-root
                             swagger-build-mode-project-components
                             "/")))
@@ -126,25 +117,14 @@ the output openapi.yaml file."
       (reverse (string-split (buffer-string) "\n")))))
 
 (defun swagger-build-mode-yaml-as-hash (yaml-path-file)
-  "This function helps to read a yaml file and return it as hashmap."
+  "This function helps to read the YAML-PATH-FILE and return it as hashmap."
   (with-temp-buffer
     (insert-file-contents yaml-path-file)
     (yaml-parse-string (buffer-string))))
 
-(defun swagger-build-mode-yaml-as-list (yaml-path-file)
-  "This function helps to read a yaml file and return it as list."
-  (with-temp-buffer
-    (insert-file-contents yaml-path-file)
-    (yaml-parse-string (buffer-string) :object-type 'alist)))
-
-(defun swagger-build-mode-yaml-path-list (path-list)
-  "This helps to create a yaml as list from a list of paths."
-  (if (= (length path-list) 1)
-      path-list
-    (cons (car path-list) (swagger-build-mode-yaml-path-list (cdr path-list)))))
-
 
 (defun swagger-build-mode-split-path (yaml-path-file)
+  "This function splith the YAML-PATH-FILE and return a list."
   (let* ((yaml-full-path (concat swagger-build-mode-project-root
                                  swagger-build-mode-project-components
                                  "/"))
@@ -161,7 +141,7 @@ the output openapi.yaml file."
 
 
 (defun swagger-build-mode-stop-watching ()
-  "Stop watching project root for changes."
+  "Stop watching all directories under project root for change."
   (interactive)
   (when swagger-build-mode-watch-descriptor
     (dolist (descriptors swagger-build-mode-watch-descriptor)
@@ -169,7 +149,5 @@ the output openapi.yaml file."
     (setq swagger-build-mode-watch-descriptor nil)
     (message "No longer watching for changes")))
 
-;;(add-hook 'yaml-mode-hook #'swagger-build-mode-enable)
-;; (provide 'swagger-build-mode-enable)
 (provide 'swagger-build-mode)
 ;;; swagger-build-mode.el ends here
