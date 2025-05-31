@@ -14,7 +14,7 @@
 ;; This file is not part of GNU Emacs.
 ;;
 ;;; Commentary:
-;;  I build this as a tool for helping me on API services definitio
+;;  I build this as a tool for helping me on API services definition
 ;;
 ;;
 ;;; Code:
@@ -47,18 +47,23 @@ contains a file named openapi.yaml."
   "This is the file where the api definition will be written.")
 
 
-
 (defun swagger-build-mode-start-watching ()
   "Begin to watch new or changed files on project root folder"
   (interactive)
-  (unless swagger-build-mode-watch-descriptor
-    (message "I will try to enable watch on %s" (concat swagger-build-mode-project-root swagger-build-mode-project-components) )
-    (setq swagger-build-mode-watch-descriptor
-          (file-notify-add-watch
-           (concat swagger-build-mode-project-root swagger-build-mode-project-components)
-           '(change attribute-change)
-           #'swagger-build-mode--on-change))
-    (message "Swagger watcher enabled.")))
+  (when-let* ((swagger-project-root (projectile-project-root))
+              (openapi-file (expand-file-name swagger-build-mode-api-file swagger-project-root)))
+    (when (file-exists-p openapi-file)
+      (unless swagger-build-mode-watch-descriptor
+        (message "I will try to enable watch on %s" (concat swagger-build-mode-project-root swagger-build-mode-project-components))
+        (dolist (directory (swagger-build-mode-get-all-directories))
+          (push swagger-build-mode-watch-descriptor
+                (swagger-build-mode-add-watch directory)))
+        (message "Swagger watcher enabled.")))))
+
+(defun swagger-build-mode-add-watch (folder)
+  (file-notify-add-watch folder
+                         '(change attribute-change)
+                         #'swagger-build-mode--on-change))
 
 (defun swagger-build-mode--on-change (event)
   "This fucntion indentifies the type of the event and the file where
@@ -101,8 +106,7 @@ the output openapi.yaml file."
                   (if (< directory-count (length yaml-files))
                       (progn (insert-file-contents yaml-file)
                              (insert "\n")
-                             (setq directory-count (1+ directory-count)))
-                    )))
+                             (setq directory-count (1+ directory-count))))))
               (message "directory %s" directory)
               (if (> counter 0)
                   (progn (insert (yaml-encode path-tree))
@@ -156,11 +160,12 @@ the output openapi.yaml file."
   "Stop watching project root for changes."
   (interactive)
   (when swagger-build-mode-watch-descriptor
-    (file-notify-rm-watch swagger-build-mode-watch-descriptor)
+    (dolist (descriptors swagger-build-mode-watch-descriptor)
+      (file-notify-rm-watch descriptors))
     (setq swagger-build-mode-watch-descriptor nil)
     (message "No longer watching for changes")))
 
-(add-hook 'yaml-mode-hook #'swagger-build-mode-enable)
+;;(add-hook 'yaml-mode-hook #'swagger-build-mode-enable)
 ;; (provide 'swagger-build-mode-enable)
 (provide 'swagger-build-mode)
 ;;; swagger-minor-mode.el ends here
