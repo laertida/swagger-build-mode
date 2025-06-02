@@ -66,7 +66,8 @@
   (let ((event-type  (nth 1 event))
         (file-name (nth 2 event)))
     (message "Change of type %s was detected on file: %s" event-type file-name)
-    (swagger-build-mode-concat-yaml-files)))
+    (if (string-equal "changed" event-type)
+        (swagger-build-mode-concat-yaml-files))))
 
 (defun swagger-build-mode-concat-yaml-files ()
   "This function helps to concat all files in the output openapi.yaml file."
@@ -111,9 +112,7 @@
   (let* ((base-path (concat swagger-build-mode-project-root
                             swagger-build-mode-project-components
                             "/")))
-    (with-temp-buffer
-      (call-process "find" nil t nil base-path "-type" "d")
-      (reverse (string-split (buffer-string) "\n")))))
+    (process-lines "find" base-path "-type" "d")))
 
 (defun swagger-build-mode-yaml-as-hash (yaml-path-file)
   "This function helps to read the YAML-PATH-FILE and return it as hashmap."
